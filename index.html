@@ -127,6 +127,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="brand">VIRGIN ACTIVE BRESCIA</div>
@@ -137,19 +138,23 @@
   </div>
 
   <script>
-    const API_URL = "YOUR_API_URL_HERE";
+    const API_URL = "https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec";
 
     let news = [];
     let current = 0;
 
     async function loadNews() {
       try {
-        const response = await fetch(API_URL);
-        news = await response.json();
+        const response = await fetch(API_URL + "?t=" + Date.now());
+        const data = await response.json();
+
+        news = Array.isArray(data) ? data : [];
         current = 0;
         showNews();
       } catch (error) {
         console.error("Errore caricamento news:", error);
+        document.getElementById("title").innerText = "";
+        document.getElementById("desc").innerHTML = "";
       }
     }
 
@@ -160,17 +165,23 @@
         return;
       }
 
-      document.getElementById("title").innerText = news[current].title;
-      document.getElementById("desc").innerHTML = news[current].description;
+      document.getElementById("title").innerText = news[current].title || "";
+      document.getElementById("desc").innerHTML = news[current].description || "";
 
       current = (current + 1) % news.length;
     }
 
     loadNews();
 
-    setInterval(() => {
-      if (news.length > 1) showNews();
+    setInterval(function () {
+      if (news.length > 1) {
+        showNews();
+      }
     }, 8000);
+
+    setInterval(function () {
+      loadNews();
+    }, 60000);
   </script>
 </body>
 </html>
