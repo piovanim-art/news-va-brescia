@@ -14,42 +14,42 @@
       overflow: hidden;
       background: #000;
       color: #fff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     }
 
     .container {
       width: 100vw;
       height: 100vh;
       box-sizing: border-box;
-      padding: 100px 72px 48px 72px;
+      padding: 160px 80px 60px 80px;
       position: relative;
-      background: #000;
     }
 
     .brand {
       color: #e31c23;
-      font-size: 28px;
-      font-weight: 700;
+      font-size: 26px;
+      font-weight: 600;
       letter-spacing: 2px;
-      margin-bottom: 38px;
+      margin-bottom: 30px;
       text-transform: uppercase;
     }
 
     .title {
-      font-size: 92px;
+      font-size: 110px;
       font-weight: 700;
-      line-height: 1.02;
+      line-height: 1.05;
       margin: 0;
-      max-width: 1300px;
-      word-break: break-word;
+      max-width: 1200px;
+      letter-spacing: -1px;
+      min-height: 120px;
     }
 
     .line {
       width: 100%;
-      max-width: 1300px;
-      height: 6px;
+      max-width: 1200px;
+      height: 5px;
       background: #8f1015;
-      margin: 18px 0 34px 0;
+      margin: 20px 0 40px 0;
       position: relative;
       overflow: hidden;
     }
@@ -58,67 +58,53 @@
       content: "";
       position: absolute;
       top: -1px;
-      left: -16%;
-      width: 16%;
-      height: 8px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255,255,255,0.8),
-        transparent
-      );
-      box-shadow: 0 0 18px rgba(255, 80, 80, 0.9);
-      animation: scan 1.6s ease-in-out infinite;
+      left: -20%;
+      width: 20%;
+      height: 7px;
+      background: linear-gradient(90deg, transparent, #fff, transparent);
+      animation: scan 1.6s infinite;
+      opacity: 0.9;
     }
 
     @keyframes scan {
-      0%   { left: -16%; }
-      50%  { left: 100%; }
-      100% { left: -16%; }
+      0% { left: -20%; }
+      50% { left: 100%; }
+      100% { left: -20%; }
     }
 
     .desc {
-      font-size: 42px;
-      line-height: 1.36;
-      max-width: 1200px;
-      word-break: break-word;
+      font-size: 60px;
+      line-height: 1.4;
+      max-width: 1150px;
+      font-weight: 400;
+      min-height: 160px;
     }
 
     .footer {
       position: absolute;
-      right: 36px;
-      bottom: 22px;
+      right: 40px;
+      bottom: 24px;
       font-size: 18px;
-      color: rgba(255,255,255,0.32);
+      color: rgba(255,255,255,0.25);
+    }
+
+    /* Fade smooth */
+    .fade {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .fade.show {
+      opacity: 1;
     }
 
     @media (orientation: portrait) {
       .container {
-        padding: 90px 48px 42px 48px;
-      }
-
-      .brand {
-        font-size: 22px;
+        padding: 120px 50px 50px 50px;
       }
 
       .title {
-        font-size: 64px;
-        max-width: 88vw;
-      }
-
-      .desc {
-        font-size: 32px;
-        max-width: 88vw;
-      }
-
-      .line {
-        max-width: 88vw;
-      }
-    }
-
-    @media (max-aspect-ratio: 4/3) {
-      .title {
-        font-size: 72px;
+        font-size: 70px;
       }
 
       .desc {
@@ -129,59 +115,90 @@
 </head>
 
 <body>
-  <div class="container">
-    <div class="brand">VIRGIN ACTIVE BRESCIA</div>
-    <div class="title" id="title"></div>
-    <div class="line"></div>
-    <div class="desc" id="desc"></div>
-    <div class="footer">Club News</div>
-  </div>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec";
+<div class="container">
+  <div class="brand">VIRGIN ACTIVE BRESCIA</div>
+  <div class="title fade show" id="title"></div>
+  <div class="line"></div>
+  <div class="desc fade show" id="desc"></div>
+  <div class="footer">Club News</div>
+</div>
 
-    let news = [];
-    let current = 0;
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec";
 
-    async function loadNews() {
-      try {
-        const response = await fetch(API_URL + "?t=" + Date.now());
-        const data = await response.json();
+let news = [];
+let current = 0;
 
-        news = Array.isArray(data) ? data : [];
-        current = 0;
-        showNews();
-      } catch (error) {
-        console.error("Errore caricamento news:", error);
-        document.getElementById("title").innerText = "";
-        document.getElementById("desc").innerHTML = "";
-      }
+// fallback immediato (zero schermo vuoto)
+const fallback = [{
+  title: "Benvenuto",
+  description: "Virgin Active Brescia"
+}];
+
+// MOSTRA SUBITO
+function showImmediate() {
+  const cache = localStorage.getItem("news_cache");
+
+  if (cache) {
+    news = JSON.parse(cache);
+  } else {
+    news = fallback;
+  }
+
+  render(true);
+}
+
+// CARICA DATI REALI
+async function loadNews() {
+  try {
+    const res = await fetch(API_URL + "?t=" + Date.now());
+    const data = await res.json();
+
+    if (Array.isArray(data) && data.length) {
+      news = data;
+      localStorage.setItem("news_cache", JSON.stringify(data));
+      current = 0;
+      render(true);
     }
 
-    function showNews() {
-      if (!news.length) {
-        document.getElementById("title").innerText = "";
-        document.getElementById("desc").innerHTML = "";
-        return;
-      }
+  } catch (e) {
+    console.log("errore fetch");
+  }
+}
 
-      document.getElementById("title").innerText = news[current].title || "";
-      document.getElementById("desc").innerHTML = news[current].description || "";
+// RENDER + ANIMAZIONE
+function render(reset=false) {
+  const titleEl = document.getElementById("title");
+  const descEl = document.getElementById("desc");
 
-      current = (current + 1) % news.length;
-    }
+  titleEl.classList.remove("show");
+  descEl.classList.remove("show");
 
-    loadNews();
+  setTimeout(() => {
+    titleEl.innerText = news[current].title || "";
+    descEl.innerHTML = news[current].description || "";
 
-    setInterval(function () {
-      if (news.length > 1) {
-        showNews();
-      }
-    }, 8000);
+    titleEl.classList.add("show");
+    descEl.classList.add("show");
+  }, reset ? 0 : 200);
+}
 
-    setInterval(function () {
-      loadNews();
-    }, 60000);
-  </script>
+// ROTAZIONE
+function next() {
+  if (news.length <= 1) return;
+
+  current = (current + 1) % news.length;
+  render();
+}
+
+// AVVIO
+showImmediate();   // istantaneo
+loadNews();        // aggiornamento
+
+setInterval(next, 8000);
+setInterval(loadNews, 60000);
+</script>
+
 </body>
 </html>
