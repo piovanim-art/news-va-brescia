@@ -1,279 +1,418 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Virgin Active Brescia News</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virgin Active Brescia News</title>
 
-<style>
+  <style>
+    @font-face {
+      font-family: "Gotham";
+      src: url("./fonts/Gotham-Black.otf") format("opentype");
+      font-weight: 900;
+      font-style: normal;
+    }
 
-/* FONT */
-@font-face {
-  font-family: "Gotham";
-  src: url("./fonts/Gotham-Black.otf") format("opentype");
-  font-weight: 900;
-}
-@font-face {
-  font-family: "Gotham";
-  src: url("./fonts/Gotham-Bold.otf") format("opentype");
-  font-weight: 700;
-}
-@font-face {
-  font-family: "Gotham";
-  src: url("./fonts/Gotham-Book.otf") format("opentype");
-  font-weight: 400;
-}
+    @font-face {
+      font-family: "Gotham";
+      src: url("./fonts/Gotham-Bold.otf") format("opentype");
+      font-weight: 700;
+      font-style: normal;
+    }
 
-/* BASE */
-body {
-  margin: 0;
-  background: #000;
-  color: #fff;
-  font-family: "Gotham", Arial;
-  overflow: hidden;
-}
+    @font-face {
+      font-family: "Gotham";
+      src: url("./fonts/Gotham-Book.otf") format("opentype");
+      font-weight: 400;
+      font-style: normal;
+    }
 
-/* CIAO */
-.splash {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    :root {
+      --va-red: #e30613;
+      --va-red-dark: #8f1015;
+      --bg: #000000;
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.22);
+    }
 
-  font-weight: 400;
-  font-size: clamp(140px, 11vw, 200px);
-  letter-spacing: 0.12em;
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Gotham", Arial, sans-serif;
+    }
 
-  color: rgba(255,255,255,0.92);
-  background: #000;
+    body {
+      background: var(--bg);
+    }
 
-  z-index: 10;
-  transition: opacity 0.5s ease;
-}
+    .splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      color: rgba(255,255,255,0.92);
+      font-family: "Gotham", Arial, sans-serif;
+      font-weight: 400;
+      font-size: clamp(140px, 11vw, 210px);
+      letter-spacing: 0.12em;
+      z-index: 20;
+      opacity: 1;
+      transition: opacity 0.55s ease;
+      pointer-events: none;
+    }
 
-.splash.hide {
-  opacity: 0;
-}
+    .splash.hide {
+      opacity: 0;
+    }
 
-/* LAYOUT */
-.container {
-  padding: 140px 80px;
-}
+    .container {
+      width: 100vw;
+      height: 100vh;
+      box-sizing: border-box;
+      padding: 145px 84px 64px 84px;
+      position: relative;
+      background: #000;
+    }
 
-/* HEADER */
-.header {
-  color: #e30613;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  margin-bottom: 25px;
-}
+    .header {
+      color: var(--va-red);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 26px;
+    }
 
-/* TITOLO */
-.title-wrap {
-  overflow: hidden;
-}
+    .title-reveal {
+      width: min(1220px, 88vw);
+      overflow: hidden;
+      margin: 0;
+    }
 
-.title {
-  font-size: 110px;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 0.95;
+    .title {
+      font-size: 108px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.96;
+      margin: 0;
+      transform: translateY(24px);
+      opacity: 0;
+      min-height: 112px;
+      text-transform: none;
+      will-change: transform, opacity;
+    }
 
-  transform: translateY(100%);
-  opacity: 0;
-}
+    .title.show {
+      animation: titleIn 0.46s cubic-bezier(.22,.8,.2,1) forwards;
+    }
 
-.title.show {
-  animation: rise 0.6s ease forwards;
-}
+    @keyframes titleIn {
+      from {
+        transform: translateY(24px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
 
-@keyframes rise {
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
+    .line {
+      width: min(1220px, 88vw);
+      height: 4px;
+      background: #9e1116;
+      margin: 10px 0 22px 0;
+      position: relative;
+      overflow: hidden;
+      border-radius: 999px;
+    }
 
-/* LINEA BASE */
-.line {
-  height: 6px;
-  background: #8f1015;
-  margin: 12px 0 25px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 3px;
-}
+    .line::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: -220px;
+      transform: translateY(-50%);
+      width: 220px;
+      height: 8px;
+      opacity: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.05) 20%,
+        rgba(255,255,255,0.25) 40%,
+        rgba(255,255,255,0.80) 65%,
+        rgba(255,255,255,1) 75%,
+        rgba(255,255,255,0.40) 85%,
+        transparent 100%
+      );
+      border-radius: 999px;
+      box-shadow:
+        0 0 4px rgba(255,255,255,0.6),
+        0 0 10px rgba(255,255,255,0.4),
+        0 0 18px rgba(227,6,19,0.3);
+      filter: blur(0.2px);
+    }
 
-/* ⭐ COMETA PREMIUM */
-.line::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: -140px;
-  width: 140px;
-  height: 16px;
-  transform: translateY(-50%);
-  opacity: 0;
+    .line.play::after {
+      animation: disneyTrail 1.35s ease-out forwards;
+    }
 
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255,120,120,0.18) 20%,
-    rgba(255,180,180,0.45) 45%,
-    rgba(255,255,255,1) 75%,
-    rgba(255,255,255,1) 82%,
-    rgba(255,140,140,0.75) 90%,
-    transparent 100%
-  );
+    @keyframes disneyTrail {
+      0% {
+        left: -220px;
+        opacity: 0;
+      }
+      12% {
+        opacity: 1;
+      }
+      82% {
+        left: 100%;
+        opacity: 1;
+      }
+      100% {
+        left: 100%;
+        opacity: 0;
+      }
+    }
 
-  border-radius: 999px;
+    .description {
+      font-size: 48px;
+      font-weight: 400;
+      line-height: 1.28;
+      letter-spacing: -0.01em;
+      max-width: 1120px;
+      opacity: 0;
+      transform: translateY(10px);
+      min-height: 140px;
+      white-space: normal;
+      word-break: break-word;
+    }
 
-  box-shadow:
-    0 0 6px rgba(255,255,255,0.95),
-    0 0 12px rgba(255,255,255,0.7),
-    0 0 20px rgba(255,80,80,0.7),
-    0 0 28px rgba(227,6,19,0.45);
-}
+    .description.show {
+      animation: descriptionIn 0.38s ease forwards;
+      animation-delay: 0.08s;
+    }
 
-.line.play::after {
-  animation: comet 0.95s ease-out forwards;
-}
+    @keyframes descriptionIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-@keyframes comet {
-  0% {
-    left: -140px;
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  85% {
-    left: calc(100% + 10px);
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
+    .footer {
+      position: absolute;
+      right: 40px;
+      bottom: 22px;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--muted);
+    }
 
-/* DESCRIZIONE */
-.description {
-  font-size: 48px;
-  font-weight: 400;
-  line-height: 1.35;
+    @media (orientation: portrait) {
+      .container {
+        padding: 120px 50px 54px 50px;
+      }
 
-  opacity: 0;
-  transform: translateY(10px);
-}
+      .header {
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
 
-.description.show {
-  animation: fadeUp 0.4s ease forwards;
-}
+      .title-reveal,
+      .line {
+        width: 88vw;
+      }
 
-@keyframes fadeUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+      .title {
+        font-size: 70px;
+        min-height: 80px;
+      }
 
-/* FOOTER */
-.footer {
-  position: absolute;
-  right: 40px;
-  bottom: 20px;
-  font-size: 18px;
-  opacity: 0.3;
-}
+      .description {
+        font-size: 34px;
+        max-width: 88vw;
+        min-height: 96px;
+      }
 
-</style>
+      .splash {
+        font-size: clamp(110px, 18vw, 180px);
+      }
+    }
+
+    @media (max-aspect-ratio: 4/3) {
+      .title {
+        font-size: 82px;
+      }
+
+      .description {
+        font-size: 40px;
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <div class="splash" id="splash">CIAO</div>
 
-<div class="splash" id="splash">CIAO</div>
+  <div class="container">
+    <div class="header">VIRGIN ACTIVE BRESCIA</div>
 
-<div class="container">
+    <div class="title-reveal">
+      <div class="title" id="title"></div>
+    </div>
 
-  <div class="header">VIRGIN ACTIVE BRESCIA</div>
+    <div class="line" id="line"></div>
 
-  <div class="title-wrap">
-    <div class="title" id="title"></div>
+    <div class="description" id="description"></div>
+
+    <div class="footer">Club News</div>
   </div>
 
-  <div class="line" id="line"></div>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec";
+    const CACHE_KEY = "news_cache_va_brescia";
+    const MIN_TIME = 6000;
+    const MAX_TIME = 12000;
 
-  <div class="description" id="description"></div>
+    let news = [];
+    let current = 0;
+    let rotateTimeout = null;
+    let splashHidden = false;
 
-  <div class="footer">Club News</div>
-
-</div>
-
-<script>
-
-const API = "https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec";
-
-let news = [];
-let current = 0;
-
-function calcTime(text) {
-  let len = text.length;
-  return Math.min(12000, Math.max(6000, len * 40));
-}
-
-function showNews() {
-
-  const t = document.getElementById("title");
-  const d = document.getElementById("description");
-  const l = document.getElementById("line");
-
-  t.classList.remove("show");
-  d.classList.remove("show");
-  l.classList.remove("play");
-
-  setTimeout(() => {
-
-    t.innerText = news[current].title;
-    d.innerHTML = news[current].description;
-
-    t.classList.add("show");
-    d.classList.add("show");
-    l.classList.add("play");
-
-    setTimeout(next, calcTime(news[current].description));
-
-  }, 120);
-}
-
-function next() {
-  current = (current + 1) % news.length;
-  showNews();
-}
-
-async function load() {
-  try {
-    const res = await fetch(API + "?t=" + Date.now());
-    news = await res.json();
-
-    if (!news.length) throw "empty";
-
-  } catch {
-    news = [{
+    const fallback = [{
       title: "Benvenuto",
       description: "Virgin Active Brescia"
     }];
-  }
 
-  document.getElementById("splash").classList.add("hide");
+    function calcTime(text) {
+      const plain = (text || "").replace(/<br\s*\/?>/gi, " ");
+      const len = plain.length;
+      const time = MIN_TIME + (len * 16);
+      return Math.max(MIN_TIME, Math.min(time, MAX_TIME));
+    }
 
-  showNews();
-}
+    function hideSplash() {
+      if (splashHidden) return;
+      splashHidden = true;
+      document.getElementById("splash").classList.add("hide");
+    }
 
-load();
+    function resetAnim() {
+      const titleEl = document.getElementById("title");
+      const descEl = document.getElementById("description");
+      const lineEl = document.getElementById("line");
 
-</script>
+      titleEl.classList.remove("show");
+      descEl.classList.remove("show");
+      lineEl.classList.remove("play");
 
+      void lineEl.offsetWidth;
+    }
+
+    function playAnim() {
+      const titleEl = document.getElementById("title");
+      const descEl = document.getElementById("description");
+      const lineEl = document.getElementById("line");
+
+      titleEl.classList.add("show");
+
+      setTimeout(() => {
+        lineEl.classList.add("play");
+      }, 120);
+
+      descEl.classList.add("show");
+
+      setTimeout(() => {
+        lineEl.classList.remove("play");
+      }, 1500);
+    }
+
+    function scheduleNext() {
+      if (rotateTimeout) clearTimeout(rotateTimeout);
+      if (news.length <= 1) return;
+
+      const delay = calcTime(news[current].description);
+      rotateTimeout = setTimeout(next, delay);
+    }
+
+    function render(immediate = false) {
+      const titleEl = document.getElementById("title");
+      const descEl = document.getElementById("description");
+
+      resetAnim();
+
+      setTimeout(() => {
+        titleEl.innerText = news[current]?.title || "";
+        descEl.innerHTML = news[current]?.description || "";
+        playAnim();
+        scheduleNext();
+      }, immediate ? 0 : 90);
+    }
+
+    function showImmediate() {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          news = JSON.parse(cached);
+        } catch {
+          news = fallback;
+        }
+      } else {
+        news = fallback;
+      }
+      render(true);
+    }
+
+    async function loadNews() {
+      try {
+        const res = await fetch(API_URL + "?t=" + Date.now(), { cache: "no-store" });
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length) {
+          news = data;
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          current = 0;
+
+          setTimeout(() => {
+            hideSplash();
+            render(true);
+          }, 900);
+        } else {
+          setTimeout(() => {
+            hideSplash();
+          }, 900);
+        }
+      } catch (e) {
+        setTimeout(() => {
+          hideSplash();
+        }, 900);
+      }
+    }
+
+    function next() {
+      if (news.length <= 1) return;
+      current = (current + 1) % news.length;
+      render(false);
+    }
+
+    showImmediate();
+    loadNews();
+
+    setInterval(loadNews, 60000);
+  </script>
 </body>
 </html>
