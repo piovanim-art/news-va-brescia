@@ -1,276 +1,480 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virgin Active Brescia News</title>
 
-<title>Virgin Active Brescia News</title>
+  <style>
+    @font-face {
+      font-family: "Gotham";
+      src: url("./fonts/Gotham-Black.otf") format("opentype");
+      font-weight: 900;
+      font-style: normal;
+    }
 
-<style>
+    @font-face {
+      font-family: "Gotham";
+      src: url("./fonts/Gotham-Bold.otf") format("opentype");
+      font-weight: 700;
+      font-style: normal;
+    }
 
-/* FONT */
-@font-face {
-  font-family: "Gotham";
-  src: url("./fonts/Gotham-Black.otf");
-  font-weight: 900;
-}
-@font-face {
-  font-family: "Gotham";
-  src: url("./fonts/Gotham-Bold.otf");
-  font-weight: 700;
-}
-@font-face {
-  font-family: "Gotham";
-  src: url("./fonts/Gotham-Book.otf");
-  font-weight: 400;
-}
+    @font-face {
+      font-family: "Gotham";
+      src: url("./fonts/Gotham-Book.otf") format("opentype");
+      font-weight: 400;
+      font-style: normal;
+    }
 
-/* BASE */
-body {
-  margin: 0;
-  background: #000;
-  color: #fff;
-  font-family: "Gotham", Arial;
-  overflow: hidden;
-}
+    :root {
+      --va-red: #e30613;
+      --bg: #000000;
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.22);
+    }
 
-/* SPLASH CIAO */
-.splash {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Gotham", Arial, sans-serif;
+    }
 
-  font-weight: 400;
-  font-size: clamp(140px, 11vw, 200px);
-  letter-spacing: 0.12em;
+    body {
+      background: var(--bg);
+    }
 
-  color: rgba(255,255,255,0.92);
-  background: #000;
+    .splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      color: rgba(255,255,255,0.92);
+      font-family: "Gotham", Arial, sans-serif;
+      font-weight: 400;
+      font-size: clamp(140px, 11vw, 200px);
+      letter-spacing: 0.12em;
+      z-index: 20;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
 
-  z-index: 10;
-  transition: opacity 0.5s ease;
-}
+    .splash.hide {
+      opacity: 0;
+    }
 
-.splash.hide {
-  opacity: 0;
-}
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      box-sizing: border-box;
+      padding: 90px 120px 70px 120px;
+      background: #000;
+    }
 
-/* LAYOUT */
-.container {
-  padding: 140px 120px; /* più centrato */
-}
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 40px;
+      width: 100%;
+    }
 
-/* HEADER */
-.header {
-  color: #e30613;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  margin-bottom: 30px;
-}
+    .left-top {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding-right: 40px;
+    }
 
-/* TITOLO */
-.title-wrap {
-  overflow: hidden;
-}
+    .brand {
+      color: var(--va-red);
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.95;
+      margin-bottom: 28px;
+      line-height: 1;
+    }
 
-.title {
-  font-size: 100px;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 0.95;
+    .title-wrap {
+      min-width: 0;
+      overflow: hidden;
+    }
 
-  transform: translateY(100%);
-  opacity: 0;
-}
+    .title {
+      font-size: 90px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      transform: translateY(18px);
+      opacity: 0;
+      will-change: transform, opacity;
+      mask-image: linear-gradient(to right, black 88%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black 88%, transparent 100%);
+    }
 
-.title.show {
-  animation: rise 0.6s ease forwards;
-}
+    .title.show {
+      animation: titleIn 0.45s cubic-bezier(.22,.8,.2,1) forwards;
+    }
 
-@keyframes rise {
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
+    @keyframes titleIn {
+      from {
+        transform: translateY(18px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
 
-/* LINEA ROSSA */
-.line {
-  height: 5px;
-  background: #9e1116;
-  margin: 16px 0 30px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 999px;
-}
+    .right-top {
+      flex: 0 0 auto;
+      text-align: right;
+      min-width: 320px;
+    }
 
-/* SCIA DISNEY */
-.line::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: -220px;
-  transform: translateY(-50%);
+    .date {
+      color: var(--va-red);
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 16px;
+      opacity: 0.95;
+    }
 
-  width: 220px;
-  height: 8px;
+    .time {
+      color: #fff;
+      font-size: 90px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+      margin: 0;
+    }
 
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255,255,255,0.05) 20%,
-    rgba(255,255,255,0.25) 40%,
-    rgba(255,255,255,0.8) 65%,
-    rgba(255,255,255,1) 75%,
-    rgba(255,255,255,0.4) 85%,
-    transparent 100%
-  );
+    .line {
+      width: 100%;
+      height: 5px;
+      background: #9e1116;
+      margin: 26px 0 34px 0;
+      position: relative;
+      overflow: hidden;
+      border-radius: 999px;
+    }
 
-  border-radius: 999px;
+    .line::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: -220px;
+      transform: translateY(-50%);
+      width: 220px;
+      height: 8px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.05) 20%,
+        rgba(255,255,255,0.25) 40%,
+        rgba(255,255,255,0.8) 65%,
+        rgba(255,255,255,1) 75%,
+        rgba(255,255,255,0.4) 85%,
+        transparent 100%
+      );
+      border-radius: 999px;
+      box-shadow:
+        0 0 4px rgba(255,255,255,0.6),
+        0 0 10px rgba(255,255,255,0.4),
+        0 0 18px rgba(227,6,19,0.3);
+      opacity: 0;
+    }
 
-  box-shadow:
-    0 0 4px rgba(255,255,255,0.6),
-    0 0 10px rgba(255,255,255,0.4),
-    0 0 18px rgba(227,6,19,0.3);
+    .line.play::after {
+      animation: disney 1.4s ease-out forwards;
+    }
 
-  opacity: 0;
-}
+    @keyframes disney {
+      0% { left: -220px; opacity: 0; }
+      12% { opacity: 1; }
+      80% { left: 100%; opacity: 1; }
+      100% { opacity: 0; }
+    }
 
-.line.play::after {
-  animation: disney 1.4s ease-out forwards;
-}
+    .description {
+      font-size: 45px;
+      font-weight: 400;
+      line-height: 1.5;
+      letter-spacing: 0.3px;
+      width: 100%;
+      max-width: 100%;
+      opacity: 0;
+      transform: translateY(10px);
+      white-space: normal;
+      word-break: break-word;
+    }
 
-@keyframes disney {
-  0% { left: -220px; opacity: 0; }
-  12% { opacity: 1; }
-  80% { left: 100%; opacity: 1; }
-  100% { opacity: 0; }
-}
+    .description.show {
+      animation: descriptionIn 0.38s ease forwards;
+    }
 
-/* DESCRIZIONE */
-.description {
-  font-size: 45px;        /* 🔥 scelto */
-  line-height: 1.5;
-  letter-spacing: 0.3px;
-  max-width: 55%;
+    @keyframes descriptionIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-  opacity: 0;
-  transform: translateY(10px);
-}
+    .footer {
+      position: absolute;
+      right: 40px;
+      bottom: 20px;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--muted);
+    }
 
-.description.show {
-  animation: fadeUp 0.4s ease forwards;
-}
+    @media (max-width: 1600px) {
+      .brand,
+      .date {
+        font-size: 30px;
+      }
 
-@keyframes fadeUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+      .title,
+      .time {
+        font-size: 80px;
+      }
 
-/* FOOTER */
-.footer {
-  position: absolute;
-  right: 40px;
-  bottom: 20px;
-  font-size: 18px;
-  opacity: 0.3;
-}
+      .description {
+        font-size: 40px;
+      }
 
-</style>
+      .right-top {
+        min-width: 280px;
+      }
+    }
+
+    @media (orientation: portrait) {
+      .container {
+        padding: 70px 50px 60px 50px;
+      }
+
+      .top-row {
+        gap: 20px;
+      }
+
+      .brand,
+      .date {
+        font-size: 20px;
+      }
+
+      .title,
+      .time {
+        font-size: 56px;
+      }
+
+      .right-top {
+        min-width: 180px;
+      }
+
+      .description {
+        font-size: 30px;
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <div class="splash" id="splash">CIAO</div>
 
-<div class="splash" id="splash">CIAO</div>
+  <div class="container">
+    <div class="top-row">
+      <div class="left-top">
+        <div class="brand">VIRGIN ACTIVE BRESCIA</div>
+        <div class="title-wrap">
+          <div class="title" id="title"></div>
+        </div>
+      </div>
 
-<div class="container">
+      <div class="right-top">
+        <div class="date" id="dateText"></div>
+        <div class="time" id="timeText"></div>
+      </div>
+    </div>
 
-  <div class="header">VIRGIN ACTIVE BRESCIA</div>
+    <div class="line" id="line"></div>
 
-  <div class="title-wrap">
-    <div class="title" id="title"></div>
+    <div class="description" id="description"></div>
+
+    <div class="footer">Club News</div>
   </div>
 
-  <div class="line" id="line"></div>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec";
+    const CACHE_KEY = "news_cache_va_brescia";
+    const MIN_TIME = 6000;
+    const MAX_TIME = 12000;
 
-  <div class="description" id="description"></div>
+    let news = [];
+    let current = 0;
+    let rotateTimeout = null;
+    let splashHidden = false;
 
-  <div class="footer">Club News</div>
-
-</div>
-
-<script>
-
-const API = "https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec";
-
-let news = [];
-let current = 0;
-
-/* TEMPO DINAMICO */
-function calcTime(text) {
-  let len = text.length;
-  return Math.min(12000, Math.max(6000, len * 35));
-}
-
-/* RENDER */
-function showNews() {
-
-  const t = document.getElementById("title");
-  const d = document.getElementById("description");
-  const l = document.getElementById("line");
-
-  t.classList.remove("show");
-  d.classList.remove("show");
-  l.classList.remove("play");
-
-  setTimeout(() => {
-
-    t.innerText = news[current].title;
-    d.innerHTML = news[current].description;
-
-    t.classList.add("show");
-    d.classList.add("show");
-    l.classList.add("play");
-
-    setTimeout(next, calcTime(news[current].description));
-
-  }, 120);
-}
-
-/* ROTAZIONE */
-function next() {
-  current = (current + 1) % news.length;
-  showNews();
-}
-
-/* LOAD */
-async function load() {
-  try {
-    const res = await fetch(API);
-    news = await res.json();
-
-    if (!news.length) throw "empty";
-
-  } catch {
-    news = [{
+    const fallback = [{
       title: "Benvenuto",
       description: "Virgin Active Brescia"
     }];
-  }
 
-  document.getElementById("splash").classList.add("hide");
+    const MONTHS_IT = [
+      "GENNAIO", "FEBBRAIO", "MARZO", "APRILE", "MAGGIO", "GIUGNO",
+      "LUGLIO", "AGOSTO", "SETTEMBRE", "OTTOBRE", "NOVEMBRE", "DICEMBRE"
+    ];
 
-  showNews();
-}
+    function calcTime(text) {
+      const plain = (text || "").replace(/<br\s*\/?>/gi, " ");
+      const len = plain.length;
+      return Math.max(MIN_TIME, Math.min(MIN_TIME + len * 35, MAX_TIME));
+    }
 
-load();
+    function formatDateTime() {
+      const now = new Date();
 
-</script>
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const month = MONTHS_IT[now.getMonth()];
+      const yyyy = now.getFullYear();
 
+      document.getElementById("timeText").textContent = `${hh}:${mm}`;
+      document.getElementById("dateText").textContent = `${dd} ${month} ${yyyy}`;
+    }
+
+    function hideSplash() {
+      if (splashHidden) return;
+      splashHidden = true;
+      document.getElementById("splash").classList.add("hide");
+    }
+
+    function resetAnim() {
+      const titleEl = document.getElementById("title");
+      const descEl = document.getElementById("description");
+      const lineEl = document.getElementById("line");
+
+      titleEl.classList.remove("show");
+      descEl.classList.remove("show");
+      lineEl.classList.remove("play");
+
+      void lineEl.offsetWidth;
+    }
+
+    function playAnim() {
+      const titleEl = document.getElementById("title");
+      const descEl = document.getElementById("description");
+      const lineEl = document.getElementById("line");
+
+      titleEl.classList.add("show");
+
+      setTimeout(() => {
+        lineEl.classList.add("play");
+      }, 120);
+
+      descEl.classList.add("show");
+
+      setTimeout(() => {
+        lineEl.classList.remove("play");
+      }, 1500);
+    }
+
+    function scheduleNext() {
+      if (rotateTimeout) clearTimeout(rotateTimeout);
+      if (news.length <= 1) return;
+
+      const delay = calcTime(news[current].description || "");
+      rotateTimeout = setTimeout(next, delay);
+    }
+
+    function render(immediate = false) {
+      const titleEl = document.getElementById("title");
+      const descEl = document.getElementById("description");
+
+      resetAnim();
+
+      setTimeout(() => {
+        titleEl.textContent = news[current]?.title || "";
+        descEl.innerHTML = news[current]?.description || "";
+        playAnim();
+        scheduleNext();
+      }, immediate ? 0 : 90);
+    }
+
+    function showImmediate() {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          news = JSON.parse(cached);
+        } catch {
+          news = fallback;
+        }
+      } else {
+        news = fallback;
+      }
+      render(true);
+    }
+
+    async function loadNews() {
+      try {
+        const res = await fetch(API_URL + "?t=" + Date.now(), { cache: "no-store" });
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length) {
+          news = data;
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          current = 0;
+
+          setTimeout(() => {
+            hideSplash();
+            render(true);
+          }, 900);
+        } else {
+          setTimeout(() => {
+            hideSplash();
+          }, 900);
+        }
+      } catch (e) {
+        setTimeout(() => {
+          hideSplash();
+        }, 900);
+      }
+    }
+
+    function next() {
+      if (news.length <= 1) return;
+      current = (current + 1) % news.length;
+      render(false);
+    }
+
+    formatDateTime();
+    setInterval(formatDateTime, 1000);
+
+    showImmediate();
+    loadNews();
+    setInterval(loadNews, 60000);
+  </script>
 </body>
 </html>
