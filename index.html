@@ -386,11 +386,13 @@
     const CACHE_KEY = "news_cache_va_brescia";
     const MIN_TIME = 6000;
     const MAX_TIME = 12000;
+    const SPLASH_DURATION = 4000;
 
     let news = [];
     let current = 0;
     let rotateTimeout = null;
     let splashHidden = false;
+    let splashTimerStarted = false;
 
     const fallback = [{
       title: "Benvenuto",
@@ -419,13 +421,15 @@
       document.getElementById("dateText").textContent = `${dd} ${month} ${yyyy}`;
     }
 
-    function hideSplash(delay = 0) {
-      if (splashHidden) return;
+    function startSplashTimer() {
+      if (splashTimerStarted) return;
+      splashTimerStarted = true;
+
       setTimeout(() => {
         if (splashHidden) return;
         splashHidden = true;
         document.getElementById("splash").classList.add("hide");
-      }, delay);
+      }, SPLASH_DURATION);
     }
 
     function resetAnim() {
@@ -480,6 +484,10 @@
       }, immediate ? 0 : 70);
     }
 
+    function sameNews(a, b) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+
     function showImmediate() {
       const cached = localStorage.getItem(CACHE_KEY);
 
@@ -494,10 +502,7 @@
       }
 
       render(true);
-
-      if (cached) {
-        hideSplash(120);
-      }
+      startSplashTimer();
     }
 
     async function loadNews() {
@@ -506,16 +511,24 @@
         const data = await res.json();
 
         if (Array.isArray(data) && data.length) {
+          const oldNews = news;
+          const changed = !sameNews(oldNews, data);
+
           news = data;
           localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-          current = 0;
-          render(true);
-          hideSplash(120);
-        } else {
-          hideSplash(180);
+
+          if (current >= news.length) {
+            current = 0;
+          }
+
+          if (!oldNews.length || changed) {
+            render(true);
+          }
         }
       } catch (e) {
-        hideSplash(180);
+        // continuiamo con cache o fallback
+      } finally {
+        startSplashTimer();
       }
     }
 
