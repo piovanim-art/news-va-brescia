@@ -76,7 +76,7 @@
     .splash-text {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       transform: translateY(0);
     }
 
@@ -90,13 +90,14 @@
       transform: translateY(30px);
       animation: fadeUpSoft 0.7s ease forwards;
       line-height: 0.95;
+      width: fit-content;
     }
 
-    .splash-text span:nth-child(1) { animation-delay: 0s;   opacity: 0.92; }
-    .splash-text span:nth-child(2) { animation-delay: 0.1s; opacity: 0.62; }
-    .splash-text span:nth-child(3) { animation-delay: 0.2s; opacity: 0.42; }
-    .splash-text span:nth-child(4) { animation-delay: 0.3s; opacity: 0.28; }
-    .splash-text span:nth-child(5) { animation-delay: 0.4s; opacity: 0.18; }
+    .splash-text span:nth-child(1) { animation-delay: 0s;   opacity: 0.92; margin-left: 0px; }
+    .splash-text span:nth-child(2) { animation-delay: 0.1s; opacity: 0.62; margin-left: 120px; }
+    .splash-text span:nth-child(3) { animation-delay: 0.2s; opacity: 0.42; margin-left: 40px; }
+    .splash-text span:nth-child(4) { animation-delay: 0.3s; opacity: 0.28; margin-left: 180px; }
+    .splash-text span:nth-child(5) { animation-delay: 0.4s; opacity: 0.18; margin-left: 75px; }
 
     .cn {
       font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
@@ -393,6 +394,7 @@
     let rotateTimeout = null;
     let splashHidden = false;
     let splashTimerStarted = false;
+    let hasRenderedRealNews = false;
 
     const fallback = [{
       title: "Benvenuto",
@@ -488,6 +490,11 @@
       return JSON.stringify(a) === JSON.stringify(b);
     }
 
+    function getRandomStartIndex(length) {
+      if (length <= 1) return 0;
+      return Math.floor(Math.random() * length);
+    }
+
     function showImmediate() {
       const cached = localStorage.getItem(CACHE_KEY);
 
@@ -501,6 +508,7 @@
         news = fallback;
       }
 
+      current = 0;
       render(true);
       startSplashTimer();
     }
@@ -517,16 +525,23 @@
           news = data;
           localStorage.setItem(CACHE_KEY, JSON.stringify(data));
 
+          if (!hasRenderedRealNews) {
+            current = getRandomStartIndex(news.length);
+            hasRenderedRealNews = true;
+            render(true);
+            return;
+          }
+
           if (current >= news.length) {
             current = 0;
           }
 
-          if (!oldNews.length || changed) {
+          if (changed) {
             render(true);
           }
         }
       } catch (e) {
-        // continuiamo con cache o fallback
+        /* continua con cache o fallback */
       } finally {
         startSplashTimer();
       }
