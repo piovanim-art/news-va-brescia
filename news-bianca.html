@@ -21,9 +21,9 @@
       display: flex; flex-direction: column;
       overflow: hidden;
     }
-    .title-box { width: 100%; max-height: 36%; flex: none; overflow: hidden; margin-bottom: clamp(16px, 3.5vh, 45px); }
+    .title-box { width: 100%; height: clamp(64px, 6.6vw, 145px); flex: none; overflow: hidden; margin-bottom: clamp(14px, 2.2vh, 28px); }
     .title {
-      font-size: clamp(28px, 4.0vw, 88px);
+      font-size: clamp(36px, 5.2vw, 112px);
       font-weight: 900; line-height: 1.12; letter-spacing: -0.035em;
       overflow-wrap: break-word; margin: 0;
     }
@@ -33,13 +33,14 @@
       font-weight: 400; line-height: 1.28; letter-spacing: 0;
       overflow-wrap: break-word;
     }
+    /* Nessun ingrandimento o riduzione in base alla lunghezza della news. */
     .title, .description { opacity: 0; transform: translateY(14px); }
     .title.show { animation: enter .45s cubic-bezier(.22,.8,.2,1) both; }
     .description.show { animation: enter .38s ease .12s both; }
     @keyframes enter { to { opacity: 1; transform: translateY(0); } }
     @media (orientation: portrait) {
       .news-panel { left: 9%; width: 82%; top: 10%; height: 57%; }
-      .title { font-size: clamp(24px, 6vw, 76px); }
+      .title { font-size: clamp(30px, 7.2vw, 90px); }
       .description { font-size: clamp(18px, 4.4vw, 46px); }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -68,14 +69,6 @@
       const plain = String(content || '').replace(/<br\s*\/?>/gi, ' ');
       return Math.max(MIN_TIME, Math.min(MIN_TIME + plain.length * 35, MAX_TIME));
     }
-    function fitText(el, holder, initialSize, minSize) {
-      el.style.fontSize = initialSize + 'px';
-      let size = initialSize;
-      while (size > minSize && (el.scrollHeight > holder.clientHeight + 1 || el.scrollWidth > holder.clientWidth + 1)) {
-        size -= 1;
-        el.style.fontSize = size + 'px';
-      }
-    }
     // Accetta i ritorni a capo delle news senza eseguire HTML arbitrario dal foglio.
     function setDescription(raw) {
       descEl.replaceChildren();
@@ -86,13 +79,9 @@
         descEl.appendChild(document.createTextNode(part));
       });
     }
-    function fitLayout() {
-      const landscape = window.innerWidth >= window.innerHeight;
-      const titleSize = Math.min(landscape ? 88 : 76, Math.max(landscape ? 28 : 24, window.innerWidth * (landscape ? .04 : .06)));
-      const descSize = Math.min(landscape ? 56 : 46, Math.max(landscape ? 20 : 18, window.innerWidth * (landscape ? .03 : .044)));
-      fitText(titleEl, document.getElementById('titleBox'), titleSize, 19);
-      fitText(descEl, document.getElementById('descriptionBox'), descSize, 15);
-    }
+    // I caratteri mantengono sempre la stessa dimensione su tutte le news.
+    // La zona del titolo e quella del testo restano fisse, senza adattamenti
+    // alla lunghezza della comunicazione.
     function scheduleNext() {
       clearTimeout(rotateTimeout);
       if (news.length > 1) rotateTimeout = setTimeout(next, calcTime(news[current].description));
@@ -104,7 +93,6 @@
       renderTimer = setTimeout(() => {
         titleEl.textContent = news[current]?.title || '';
         setDescription(news[current]?.description || '');
-        fitLayout();
         void titleEl.offsetWidth;
         titleEl.classList.add('show');
         descEl.classList.add('show');
@@ -139,8 +127,6 @@
         }
       } catch (e) { console.warn('News: utilizzo la cache disponibile', e); }
     }
-    window.addEventListener('resize', fitLayout);
-    if (document.fonts?.ready) document.fonts.ready.then(fitLayout);
     showImmediate();
     loadNews();
     setInterval(loadNews, 60000);
