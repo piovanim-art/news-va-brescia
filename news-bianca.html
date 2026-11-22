@@ -17,7 +17,7 @@
     /* L'area di testo termina prima della fascia rossa e della sua sfumatura. */
     .news-panel {
       position: absolute;
-      left: 10%; top: 12%; width: 80%; height: 56%;
+      left: 10%; top: 10%; width: 80%; height: 59%;
       display: flex; flex-direction: column;
       overflow: hidden;
     }
@@ -29,8 +29,8 @@
     }
     .description-box { flex: 1; min-height: 0; overflow: hidden; }
     .description {
-      font-size: clamp(20px, 3.0vw, 56px);
-      font-weight: 400; line-height: 1.28; letter-spacing: 0;
+      font-size: clamp(20px, 2.55vw, 48px);
+      font-weight: 400; line-height: 1.22; letter-spacing: 0;
       overflow-wrap: break-word;
     }
     /* Nessun ingrandimento o riduzione in base alla lunghezza della news. */
@@ -54,82 +54,141 @@
     <div class="description-box" id="descriptionBox"><div class="description" id="description"></div></div>
   </main>
   <script>
-    // Stesso endpoint e stessa cadenza di rotazione della pagina nera esistente.
+    // Dati condivisi con la pagina nera. Nessuna modifica a index.html.
     const API_URL = 'https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec';
     const CACHE_KEY = 'news_cache_va_brescia';
     const MIN_TIME = 6000;
     const MAX_TIME = 12000;
-    const fallback = [{title:'Benvenuto', description:'Virgin Active Brescia'}];
-    let news = [], current = 0, rotateTimeout = null, hasRenderedRealNews = false;
+    let news = [];
+    let current = 0;
+    let page = 0;
+    let pages = [];
+    let rotateTimeout = null;
     let renderTimer = null;
+    let renderedKey = '';
     const titleEl = document.getElementById('title');
     const descEl = document.getElementById('description');
+    const descBox = document.getElementById('descriptionBox');
 
-    function calcTime(content) {
-      const plain = String(content || '').replace(/<br\s*\/?>/gi, ' ');
-      return Math.max(MIN_TIME, Math.min(MIN_TIME + plain.length * 35, MAX_TIME));
+    function plainText(raw) {
+      return String(raw ?? '')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|li)>/gi, '\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/\r\n?/g, '\n').trim();
     }
-    // Accetta i ritorni a capo delle news senza eseguire HTML arbitrario dal foglio.
-    function setDescription(raw) {
-      descEl.replaceChildren();
-      const pieces = String(raw || '').replace(/<\/(p|div)>/gi, '<br>')
-        .replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').split('\n');
-      pieces.forEach((part, index) => {
-        if (index) descEl.appendChild(document.createElement('br'));
-        descEl.appendChild(document.createTextNode(part));
-      });
+    function calcTime(text) {
+      const length = String(text || '').length;
+      return Math.max(MIN_TIME, Math.min(MIN_TIME + length * 35, MAX_TIME));
     }
-    // I caratteri mantengono sempre la stessa dimensione su tutte le news.
-    // La zona del titolo e quella del testo restano fisse, senza adattamenti
-    // alla lunghezza della comunicazione.
-    function scheduleNext() {
+    // Divide le comunicazioni troppo lunghe in schermate, senza rimpicciolire
+    // il carattere e senza nascondere righe dietro la fascia rossa.
+    function makePages(text) {
+      const words = text.match(/\S+|\s+/g) || [''];
+      const result = [];
+      let pos = 0;
+      while (pos < words.length) {
+        let low = pos + 1, high = words.length, best = pos;
+        while (low <= high) {
+          const mid = Math.floor((low + high) / 2);
+          descEl.textContent = words.slice(pos, mid).join('').trim();
+          if (descEl.scrollHeight <= descBox.clientHeight + 1) {
+            best = mid;
+            low = mid + 1;
+          } else high = mid - 1;
+        }
+        if (best === pos) best = pos + 1;
+        result.push(words.slice(pos, best).join('').trim());
+        pos = best;
+      }
+      return result.length ? result : [''];
+    }
+    function showPage(animate = true) {
       clearTimeout(rotateTimeout);
-      if (news.length > 1) rotateTimeout = setTimeout(next, calcTime(news[current].description));
-    }
-    function render(immediate = false) {
       clearTimeout(renderTimer);
+      if (!news.length) return;
+      const item = news[current];
       titleEl.classList.remove('show');
       descEl.classList.remove('show');
-      renderTimer = setTimeout(() => {
-        titleEl.textContent = news[current]?.title || '';
-        setDescription(news[current]?.description || '');
-        void titleEl.offsetWidth;
+      titleEl.textContent = item.title || '';
+      descEl.textContent = pages[page] || '';
+      // Non annullare l'animazione se si visualizza una nuova schermata.
+      void titleEl.offsetWidth;
+      if (animate) {
         titleEl.classList.add('show');
         descEl.classList.add('show');
-        scheduleNext();
-      }, immediate ? 0 : 70);
+      } else {
+        titleEl.style.opacity = '1';
+        titleEl.style.transform = 'none';
+        descEl.style.opacity = '1';
+        descEl.style.transform = 'none';
+      }
+      rotateTimeout = setTimeout(advance, calcTime(pages[page]));
     }
-    function next() { if (news.length > 1) { current = (current + 1) % news.length; render(); } }
-    function showImmediate() {
-      try {
-        const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-        news = Array.isArray(cached) && cached.length ? cached : fallback;
-      } catch (_) { news = fallback; }
-      current = 0;
-      render(true);
+    function prepareCurrent() {
+      if (!news.length) return;
+      titleEl.textContent = news[current].title || '';
+      pages = makePages(plainText(news[current].description));
+      page = 0;
+      showPage();
+      renderedKey = JSON.stringify(news[current]);
     }
+    function advance() {
+      if (page + 1 < pages.length) {
+        page += 1;
+        showPage();
+      } else if (news.length > 1) {
+        current = (current + 1) % news.length;
+        prepareCurrent();
+      } else {
+        rotateTimeout = null;
+      }
+    }
+    function normalize(data) {
+      return Array.isArray(data) ? data.filter(x => x && (x.title || x.description)) : [];
+    }
+    // La cache viene mostrata una volta sola. All'arrivo del feed non
+    // ripartiamo da capo se la news mostrata è ancora presente.
+    try {
+      news = normalize(JSON.parse(localStorage.getItem(CACHE_KEY)));
+    } catch (_) { news = []; }
+    if (news.length) prepareCurrent();
+
     async function loadNews() {
       try {
-        const res = await fetch(API_URL + '?t=' + Date.now(), { cache:'no-store' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        if (!Array.isArray(data) || !data.length) return;
-        const changed = JSON.stringify(news) !== JSON.stringify(data);
-        news = data;
-        try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (_) {}
-        if (!hasRenderedRealNews) {
-          current = news.length > 1 ? Math.floor(Math.random() * news.length) : 0;
-          hasRenderedRealNews = true;
-          render(true);
+        const response = await fetch(API_URL + '?t=' + Date.now(), {cache: 'no-store'});
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const incoming = normalize(await response.json());
+        if (!incoming.length) return;
+        const before = JSON.stringify(news);
+        const after = JSON.stringify(incoming);
+        if (before === after) return; // Evita il doppio avvio della prima news.
+        const currentKey = news[current] ? JSON.stringify(news[current]) : null;
+        const previousPage = page;
+        news = incoming;
+        try { localStorage.setItem(CACHE_KEY, after); } catch (_) {}
+        const sameIndex = currentKey ? news.findIndex(x => JSON.stringify(x) === currentKey) : -1;
+        if (sameIndex >= 0) {
+          current = sameIndex;
+          // Non interrompere né ripetere la notizia già in lettura.
+          page = previousPage;
         } else {
-          if (current >= news.length) current = 0;
-          if (changed) render(true);
+          current = 0;
+          prepareCurrent();
         }
-      } catch (e) { console.warn('News: utilizzo la cache disponibile', e); }
+      } catch (e) {
+        console.warn('News: impossibile aggiornare, utilizzo i dati disponibili', e);
+      }
     }
-    showImmediate();
     loadNews();
     setInterval(loadNews, 60000);
+    window.addEventListener('resize', () => {
+      if (news.length) prepareCurrent();
+    });
   </script>
 </body>
 </html>
