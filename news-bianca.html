@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virgin Active Brescia — News bianca</title>
+  <style>
+    @font-face { font-family: Gotham; src: url('./fonts/Gotham-Black.otf') format('opentype'); font-weight: 900; font-display: swap; }
+    @font-face { font-family: Gotham; src: url('./fonts/Gotham-Book.otf') format('opentype'); font-weight: 400; font-display: swap; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      background: #fff url('./sfondo.jpg') center center / 100% 100% no-repeat;
+      color: #090909;
+      font-family: Gotham, Arial, sans-serif;
+    }
+    /* L'area di testo termina prima della fascia rossa e della sua sfumatura. */
+    .news-panel {
+      position: absolute;
+      left: 10%; top: 12%; width: 80%; height: 56%;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .title-box { width: 100%; max-height: 36%; flex: none; overflow: hidden; margin-bottom: clamp(16px, 3.5vh, 45px); }
+    .title {
+      font-size: clamp(28px, 4.0vw, 88px);
+      font-weight: 900; line-height: 1.12; letter-spacing: -0.035em;
+      overflow-wrap: break-word; margin: 0;
+    }
+    .description-box { flex: 1; min-height: 0; overflow: hidden; }
+    .description {
+      font-size: clamp(20px, 3.0vw, 56px);
+      font-weight: 400; line-height: 1.28; letter-spacing: 0;
+      overflow-wrap: break-word;
+    }
+    .title, .description { opacity: 0; transform: translateY(14px); }
+    .title.show { animation: enter .45s cubic-bezier(.22,.8,.2,1) both; }
+    .description.show { animation: enter .38s ease .12s both; }
+    @keyframes enter { to { opacity: 1; transform: translateY(0); } }
+    @media (orientation: portrait) {
+      .news-panel { left: 9%; width: 82%; top: 10%; height: 57%; }
+      .title { font-size: clamp(24px, 6vw, 76px); }
+      .description { font-size: clamp(18px, 4.4vw, 46px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .title.show, .description.show { animation: none; opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="news-panel" aria-live="polite">
+    <div class="title-box" id="titleBox"><h1 class="title" id="title"></h1></div>
+    <div class="description-box" id="descriptionBox"><div class="description" id="description"></div></div>
+  </main>
+  <script>
+    // Stesso endpoint e stessa cadenza di rotazione della pagina nera esistente.
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybpwUuhjoKeGN5Lu57HgkAw3e5xfGGQ1HkZdj8D2RQ7rnjTUByejbVVfnKnQa31Hvj/exec';
+    const CACHE_KEY = 'news_cache_va_brescia';
+    const MIN_TIME = 6000;
+    const MAX_TIME = 12000;
+    const fallback = [{title:'Benvenuto', description:'Virgin Active Brescia'}];
+    let news = [], current = 0, rotateTimeout = null, hasRenderedRealNews = false;
+    let renderTimer = null;
+    const titleEl = document.getElementById('title');
+    const descEl = document.getElementById('description');
+
+    function calcTime(content) {
+      const plain = String(content || '').replace(/<br\s*\/?>/gi, ' ');
+      return Math.max(MIN_TIME, Math.min(MIN_TIME + plain.length * 35, MAX_TIME));
+    }
+    function fitText(el, holder, initialSize, minSize) {
+      el.style.fontSize = initialSize + 'px';
+      let size = initialSize;
+      while (size > minSize && (el.scrollHeight > holder.clientHeight + 1 || el.scrollWidth > holder.clientWidth + 1)) {
+        size -= 1;
+        el.style.fontSize = size + 'px';
+      }
+    }
+    // Accetta i ritorni a capo delle news senza eseguire HTML arbitrario dal foglio.
+    function setDescription(raw) {
+      descEl.replaceChildren();
+      const pieces = String(raw || '').replace(/<\/(p|div)>/gi, '<br>')
+        .replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').split('\n');
+      pieces.forEach((part, index) => {
+        if (index) descEl.appendChild(document.createElement('br'));
+        descEl.appendChild(document.createTextNode(part));
+      });
+    }
+    function fitLayout() {
+      const landscape = window.innerWidth >= window.innerHeight;
+      const titleSize = Math.min(landscape ? 88 : 76, Math.max(landscape ? 28 : 24, window.innerWidth * (landscape ? .04 : .06)));
+      const descSize = Math.min(landscape ? 56 : 46, Math.max(landscape ? 20 : 18, window.innerWidth * (landscape ? .03 : .044)));
+      fitText(titleEl, document.getElementById('titleBox'), titleSize, 19);
+      fitText(descEl, document.getElementById('descriptionBox'), descSize, 15);
+    }
+    function scheduleNext() {
+      clearTimeout(rotateTimeout);
+      if (news.length > 1) rotateTimeout = setTimeout(next, calcTime(news[current].description));
+    }
+    function render(immediate = false) {
+      clearTimeout(renderTimer);
+      titleEl.classList.remove('show');
+      descEl.classList.remove('show');
+      renderTimer = setTimeout(() => {
+        titleEl.textContent = news[current]?.title || '';
+        setDescription(news[current]?.description || '');
+        fitLayout();
+        void titleEl.offsetWidth;
+        titleEl.classList.add('show');
+        descEl.classList.add('show');
+        scheduleNext();
+      }, immediate ? 0 : 70);
+    }
+    function next() { if (news.length > 1) { current = (current + 1) % news.length; render(); } }
+    function showImmediate() {
+      try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        news = Array.isArray(cached) && cached.length ? cached : fallback;
+      } catch (_) { news = fallback; }
+      current = 0;
+      render(true);
+    }
+    async function loadNews() {
+      try {
+        const res = await fetch(API_URL + '?t=' + Date.now(), { cache:'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!Array.isArray(data) || !data.length) return;
+        const changed = JSON.stringify(news) !== JSON.stringify(data);
+        news = data;
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (_) {}
+        if (!hasRenderedRealNews) {
+          current = news.length > 1 ? Math.floor(Math.random() * news.length) : 0;
+          hasRenderedRealNews = true;
+          render(true);
+        } else {
+          if (current >= news.length) current = 0;
+          if (changed) render(true);
+        }
+      } catch (e) { console.warn('News: utilizzo la cache disponibile', e); }
+    }
+    window.addEventListener('resize', fitLayout);
+    if (document.fonts?.ready) document.fonts.ready.then(fitLayout);
+    showImmediate();
+    loadNews();
+    setInterval(loadNews, 60000);
+  </script>
+</body>
+</html>
