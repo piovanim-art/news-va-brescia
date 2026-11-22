@@ -32,8 +32,9 @@
       font-size: clamp(20px, 2.55vw, 48px);
       font-weight: 400; line-height: 1.22; letter-spacing: 0;
       overflow-wrap: break-word;
+      white-space: pre-line; /* Conserva gli a capo manuali di Google Sheets */
     }
-    /* Nessun ingrandimento o riduzione in base alla lunghezza della news. */
+    /* Dimensione standard; il testo si riduce solo se non entra nell’area bianca. */
     .title, .description { opacity: 0; transform: translateY(14px); }
     .title.show { animation: enter .45s cubic-bezier(.22,.8,.2,1) both; }
     .description.show { animation: enter .38s ease .12s both; }
@@ -61,11 +62,7 @@
     const MAX_TIME = 12000;
     let news = [];
     let current = 0;
-    let page = 0;
-    let pages = [];
     let rotateTimeout = null;
-    let renderTimer = null;
-    let renderedKey = '';
     const titleEl = document.getElementById('title');
     const descEl = document.getElementById('description');
     const descBox = document.getElementById('descriptionBox');
@@ -85,38 +82,33 @@
       const length = String(text || '').length;
       return Math.max(MIN_TIME, Math.min(MIN_TIME + length * 35, MAX_TIME));
     }
-    // Divide le comunicazioni troppo lunghe in schermate, senza rimpicciolire
-    // il carattere e senza nascondere righe dietro la fascia rossa.
-    function makePages(text) {
-      const words = text.match(/\S+|\s+/g) || [''];
-      const result = [];
-      let pos = 0;
-      while (pos < words.length) {
-        let low = pos + 1, high = words.length, best = pos;
-        while (low <= high) {
-          const mid = Math.floor((low + high) / 2);
-          descEl.textContent = words.slice(pos, mid).join('').trim();
-          if (descEl.scrollHeight <= descBox.clientHeight + 1) {
-            best = mid;
-            low = mid + 1;
-          } else high = mid - 1;
-        }
-        if (best === pos) best = pos + 1;
-        result.push(words.slice(pos, best).join('').trim());
-        pos = best;
+    // Mantiene ogni comunicazione su UNA sola schermata.
+    // La dimensione è quella standard, tranne nei casi in cui il testo
+    // non entra nell’area bianca: allora diminuisce soltanto quanto serve.
+    function fitDescription() {
+      descEl.style.fontSize = '';
+      const standard = parseFloat(getComputedStyle(descEl).fontSize);
+      if (descEl.scrollHeight <= descBox.clientHeight + 1 &&
+          descEl.scrollWidth <= descBox.clientWidth + 1) return;
+      let low = 1, high = standard;
+      for (let i = 0; i < 18; i++) {
+        const mid = (low + high) / 2;
+        descEl.style.fontSize = mid + 'px';
+        if (descEl.scrollHeight <= descBox.clientHeight + 1 &&
+            descEl.scrollWidth <= descBox.clientWidth + 1) low = mid;
+        else high = mid;
       }
-      return result.length ? result : [''];
+      descEl.style.fontSize = low + 'px';
     }
-    function showPage(animate = true) {
+    function showNews(animate = true) {
       clearTimeout(rotateTimeout);
-      clearTimeout(renderTimer);
       if (!news.length) return;
       const item = news[current];
       titleEl.classList.remove('show');
       descEl.classList.remove('show');
       titleEl.textContent = item.title || '';
-      descEl.textContent = pages[page] || '';
-      // Non annullare l'animazione se si visualizza una nuova schermata.
+      descEl.textContent = plainText(item.description);
+      fitDescription();
       void titleEl.offsetWidth;
       if (animate) {
         titleEl.classList.add('show');
@@ -127,26 +119,14 @@
         descEl.style.opacity = '1';
         descEl.style.transform = 'none';
       }
-      rotateTimeout = setTimeout(advance, calcTime(pages[page]));
-    }
-    function prepareCurrent() {
-      if (!news.length) return;
-      titleEl.textContent = news[current].title || '';
-      pages = makePages(plainText(news[current].description));
-      page = 0;
-      showPage();
-      renderedKey = JSON.stringify(news[current]);
+      if (news.length > 1) {
+        rotateTimeout = setTimeout(advance, calcTime(descEl.textContent));
+      }
     }
     function advance() {
-      if (page + 1 < pages.length) {
-        page += 1;
-        showPage();
-      } else if (news.length > 1) {
-        current = (current + 1) % news.length;
-        prepareCurrent();
-      } else {
-        rotateTimeout = null;
-      }
+      if (news.length < 2) return;
+      current = (current + 1) % news.length;
+      showNews();
     }
     function normalize(data) {
       return Array.isArray(data) ? data.filter(x => x && (x.title || x.description)) : [];
@@ -156,7 +136,7 @@
     try {
       news = normalize(JSON.parse(localStorage.getItem(CACHE_KEY)));
     } catch (_) { news = []; }
-    if (news.length) prepareCurrent();
+    if (news.length) showNews();
 
     async function loadNews() {
       try {
@@ -168,17 +148,15 @@
         const after = JSON.stringify(incoming);
         if (before === after) return; // Evita il doppio avvio della prima news.
         const currentKey = news[current] ? JSON.stringify(news[current]) : null;
-        const previousPage = page;
         news = incoming;
         try { localStorage.setItem(CACHE_KEY, after); } catch (_) {}
         const sameIndex = currentKey ? news.findIndex(x => JSON.stringify(x) === currentKey) : -1;
         if (sameIndex >= 0) {
           current = sameIndex;
           // Non interrompere né ripetere la notizia già in lettura.
-          page = previousPage;
         } else {
           current = 0;
-          prepareCurrent();
+          showNews();
         }
       } catch (e) {
         console.warn('News: impossibile aggiornare, utilizzo i dati disponibili', e);
@@ -187,7 +165,7 @@
     loadNews();
     setInterval(loadNews, 60000);
     window.addEventListener('resize', () => {
-      if (news.length) prepareCurrent();
+      if (news.length) showNews();
     });
   </script>
 </body>
